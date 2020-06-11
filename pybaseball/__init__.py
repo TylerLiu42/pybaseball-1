@@ -1,6 +1,7 @@
 import pybaseball.utils
 from .playerid_lookup import playerid_reverse_lookup
 from .playerid_lookup import playerid_lookup
+from .playerid_lookup import chadwick_register
 from .statcast import statcast, statcast_single_game
 from .statcast_pitcher import statcast_pitcher
 from .statcast_batter import statcast_batter, statcast_batter_exitvelo_barrels
@@ -53,4 +54,10 @@ from .retrosheet import all_star_game_logs
 from .retrosheet import wild_card_logs
 from .retrosheet import division_series_logs
 from .retrosheet import lcs_logs
+from .retrosheet import schedules
+from .retrosheet import park_codes
+from .retrosheet import rosters
+from .retrosheet import events
 from .team_game_logs import team_game_logs
+from .plotting import plot_stadium
+from .plotting import spraychart

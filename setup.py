@@ -84,11 +84,13 @@ setup(
     # your project is installed. For an analysis of "install_requires" vs pip's
     # requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
-    install_requires=['numpy>=1.13.0', 
+    install_requires=['numpy>=1.13.0',
                       'pandas >= 0.20.2',
                       'beautifulsoup4>=4.4.0',
                       'requests>=2.18.1',
-                      'lxml>=4.2.1'
+                      'lxml>=4.2.1',
+                      'pygithub>=1.51',
+                      'altair'
                       ],
 
     # List additional groups of dependencies here (e.g. development
@@ -103,6 +105,7 @@ setup(
     # If there are data files included in your packages that need to be
     # installed, specify them here.  If using Python 2.6 or less, then these
     # have to be included in MANIFEST.in as well.
+    include_package_data=True,
     #package_data={
     #    'sample': ['package_data.dat'],
     #},
