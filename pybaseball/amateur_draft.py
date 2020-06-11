@@ -31,7 +31,6 @@ def amateur_draft(year, round):
     url = f"https://www.baseballamerica.com/draft-history/mlb-draft-database/#/?Year={year}&Round={round}"
     page = Client(url)
     soup = BeautifulSoup(page.html, 'html.parser')
-    js_test = soup.find('table', class_='draft-search-table')
     draftResults = pd.read_html(soup.prettify())
     draftResults = postprocess(draftResults)
     return draftResults
