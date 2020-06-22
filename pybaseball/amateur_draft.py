@@ -1,43 +1,52 @@
 import pandas as pd
-import requests 
-from bs4 import BeautifulSoup
-import sys
-from PyQt5.QtWidgets import QApplication
-from PyQt5.QtCore import QUrl
-from PyQt5.QtWebEngineWidgets import QWebEnginePage
+import requests
 
-class Client(QWebEnginePage):
-    
-    def __init__(self, url):
-        self.app = QApplication(sys.argv)
-        QWebEnginePage.__init__(self)
-        self.html = ''
-        self.loadFinished.connect(self._on_load_finished)
-        self.load(QUrl(url))
-        self.app.exec_()
-        
-    def _on_load_finished(self):
-        self.html = self.toHtml(self.Callable)
+pitcherStatColumns = ['WAR', 'G.1', 'W', 'L', 'ERA', 'WHIP', 'SV']
+batterStatColumns = ['WAR', 'G', 'AB', 'HR', 'BA', 'OPS']
 
-    def Callable(self, html_str):
-        self.html = html_str
-        self.app.quit()
-
+def getDraftResults(year, round): 
+    url = f"https://www.baseball-reference.com/draft/?year_ID={year}&draft_round={round}&draft_type=junreg&query_type=year_round&"
+    res = requests.get(url, timeout=None).content 
+    draftResults = pd.read_html(res)
+    return draftResults
 
 def amateur_draft(year, round):
-    round = round.replace('s', '.5')
-    pd.set_option('expand_frame_repr', False)
-    pd.set_option('display.max_columns', None)
-    url = f"https://www.baseballamerica.com/draft-history/mlb-draft-database/#/?Year={year}&Round={round}"
-    page = Client(url)
-    soup = BeautifulSoup(page.html, 'html.parser')
-    draftResults = pd.read_html(soup.prettify())
+    draftResults = getDraftResults(year, round)
+    draftResults = pd.concat(draftResults)
     draftResults = postprocess(draftResults)
     return draftResults
 
+def amateur_draft_stats(year, round):
+    draftResults = getDraftResults(year, round)
+    draftResults = pd.concat(draftResults)
+    drafteeStats = outputMajorLeagueStats(draftResults)
+    return drafteeStats
+
+def outputMajorLeagueStats(draftResults):
+    pitchers = draftResults.loc[(pd.notna(draftResults['ERA']))] 
+    batters = draftResults.loc[pd.notna(draftResults['AB'])]
+    pitcherStats = postprocessStats(pitchers, "Pitcher")
+    batterStats = postprocessStats(batters, "Batter")
+    return (pitcherStats, batterStats)
+
 def postprocess(draftResults):
-    for draftee in draftResults:
-        draftee.drop(['Year', 'Team', 'Reports'], axis=1, inplace=True)
+    draftResults = removeNameSuffix(draftResults)
+    draftResults.drop(['Year', 'Rnd', 'RdPck', 'DT', 'FrRnd', 'WAR', 'G', 'AB', 'HR', 'BA', 'OPS', 'G.1', 'W', 'L', 'ERA', 'WHIP', 'SV'], axis=1, inplace=True)
     return draftResults
 
-#amateur_draft(2019, '1s')
+def postprocessStats(draftResults, playerType):
+    draftResults = removeNameSuffix(draftResults)
+    columnsToKeep = ['Name']
+    columnsToKeep.extend(pitcherStatColumns) if playerType == "Pitcher" else columnsToKeep.extend(batterStatColumns)
+    draftResults = draftResults[columnsToKeep]
+    if (playerType == "Pitcher"):
+        draftResults.rename({'G.1': 'G'}, axis=1, inplace=True)
+    return draftResults
+
+def removeNameSuffix(draftResults):
+    draftResults = draftResults.copy()
+    draftResults.loc[:,'Name'] = draftResults['Name'].apply(removeMinorsLink)
+    return draftResults
+
+def removeMinorsLink(draftee):
+    return draftee.split('(')[0]
