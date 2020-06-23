@@ -1,52 +1,52 @@
 import pandas as pd
 import requests
 
-pitcherStatColumns = ['WAR', 'G.1', 'W', 'L', 'ERA', 'WHIP', 'SV']
-batterStatColumns = ['WAR', 'G', 'AB', 'HR', 'BA', 'OPS']
+pitcher_stat_columns = ['WAR', 'G.1', 'W', 'L', 'ERA', 'WHIP', 'SV']
+batter_stat_columns = ['WAR', 'G', 'AB', 'HR', 'BA', 'OPS']
 
-def getDraftResults(year, round): 
+def get_draft_results(year, round): 
     url = f"https://www.baseball-reference.com/draft/?year_ID={year}&draft_round={round}&draft_type=junreg&query_type=year_round&"
     res = requests.get(url, timeout=None).content 
-    draftResults = pd.read_html(res)
-    return draftResults
+    draft_results = pd.read_html(res)
+    return draft_results
 
 def amateur_draft(year, round):
-    draftResults = getDraftResults(year, round)
-    draftResults = pd.concat(draftResults)
-    draftResults = postprocess(draftResults)
-    return draftResults
+    draft_results = get_draft_results(year, round)
+    draft_results = pd.concat(draft_results)
+    draft_results = postprocess(draft_results)
+    return draft_results
 
 def amateur_draft_stats(year, round):
-    draftResults = getDraftResults(year, round)
-    draftResults = pd.concat(draftResults)
-    drafteeStats = outputMajorLeagueStats(draftResults)
-    return drafteeStats
+    draft_results = get_draft_results(year, round)
+    draft_results = pd.concat(draft_results)
+    draftee_stats = output_major_league_stats(draft_results)
+    return draftee_stats
 
-def outputMajorLeagueStats(draftResults):
-    pitchers = draftResults.loc[(pd.notna(draftResults['ERA']))] 
-    batters = draftResults.loc[pd.notna(draftResults['AB'])]
-    pitcherStats = postprocessStats(pitchers, "Pitcher")
-    batterStats = postprocessStats(batters, "Batter")
-    return (pitcherStats, batterStats)
+def output_major_league_stats(draft_results):
+    pitchers = draft_results.loc[(pd.notna(draft_results['ERA']))] 
+    batters = draft_results.loc[pd.notna(draft_results['AB'])]
+    pitcher_stats = postprocess_stats(pitchers, "Pitcher")
+    batter_stats = postprocess_stats(batters, "Batter")
+    return (pitcher_stats, batter_stats)
 
-def postprocess(draftResults):
-    draftResults = removeNameSuffix(draftResults)
-    draftResults.drop(['Year', 'Rnd', 'RdPck', 'DT', 'FrRnd', 'WAR', 'G', 'AB', 'HR', 'BA', 'OPS', 'G.1', 'W', 'L', 'ERA', 'WHIP', 'SV'], axis=1, inplace=True)
-    return draftResults
+def postprocess(draft_results):
+    draft_results = remove_name_suffix(draft_results)
+    draft_results.drop(['Year', 'Rnd', 'RdPck', 'DT', 'FrRnd', 'WAR', 'G', 'AB', 'HR', 'BA', 'OPS', 'G.1', 'W', 'L', 'ERA', 'WHIP', 'SV'], axis=1, inplace=True)
+    return draft_results
 
-def postprocessStats(draftResults, playerType):
-    draftResults = removeNameSuffix(draftResults)
-    columnsToKeep = ['Name']
-    columnsToKeep.extend(pitcherStatColumns) if playerType == "Pitcher" else columnsToKeep.extend(batterStatColumns)
-    draftResults = draftResults[columnsToKeep]
-    if (playerType == "Pitcher"):
-        draftResults.rename({'G.1': 'G'}, axis=1, inplace=True)
-    return draftResults
+def postprocess_stats(draft_results, player_type):
+    draft_results = remove_name_suffix(draft_results)
+    columns_to_keep = ['Name']
+    columns_to_keep.extend(pitcher_stat_columns) if player_type == "Pitcher" else columns_to_keep.extend(batter_stat_columns)
+    draft_results = draft_results[columns_to_keep]
+    if (player_type == "Pitcher"):
+        draft_results.rename({'G.1': 'G'}, axis=1, inplace=True)
+    return draft_results
 
-def removeNameSuffix(draftResults):
-    draftResults = draftResults.copy()
-    draftResults.loc[:,'Name'] = draftResults['Name'].apply(removeMinorsLink)
-    return draftResults
+def remove_name_suffix(draft_results):
+    draft_results = draft_results.copy()
+    draft_results.loc[:,'Name'] = draft_results['Name'].apply(remove_minors_link)
+    return draft_results
 
-def removeMinorsLink(draftee):
+def remove_minors_link(draftee):
     return draftee.split('(')[0]
