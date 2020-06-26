@@ -7,7 +7,7 @@ def get_draft_results(year, round):
     draft_results = pd.read_html(res)
     return draft_results
 
-def amateur_draft(year, round, keep_stats):
+def amateur_draft(year, round, keep_stats=True):
     draft_results = get_draft_results(year, round)
     draft_results = pd.concat(draft_results)
     draft_results = postprocess(draft_results)
